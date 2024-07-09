@@ -5,13 +5,11 @@ import time
 import pandas as pd
 import matplotlib.pyplot as plt
 from collections import Counter
-import socket
-from requests.exceptions import RequestException
 from PyQt6.QtWidgets import (
     QApplication, QWidget, QLabel, QLineEdit, QPushButton, QVBoxLayout, QHBoxLayout,
-    QTextEdit, QProgressBar, QDialog, QMainWindow, QScrollArea, QTableWidget, QTableWidgetItem, QHeaderView
+    QTextEdit, QProgressBar, QDialog, QScrollArea, QTableWidget, QTableWidgetItem, QHeaderView
 )
-from PyQt6.QtCore import Qt, pyqtSignal, QThread
+from PyQt6.QtCore import pyqtSignal, QThread
 from PyQt6.QtGui import QPixmap
 
 class StressTestThread(QThread):
@@ -43,27 +41,9 @@ class StressTestThread(QThread):
                     end_time = time.time()
                     duration = end_time - start_time
                     return (response.status_code, duration, None)
-                except (requests.exceptions.Timeout, socket.timeout):
-                    end_time = time.time()
-                    duration = end_time - start_time
-                    last_exception = 'Timeout'
-                except requests.exceptions.ConnectionError:
-                    end_time = time.time()
-                    duration = end_time - start_time
-                    last_exception = 'ConnectionError'
-                except requests.exceptions.HTTPError:
-                    end_time = time.time()
-                    duration = end_time - start_time
-                    last_exception = 'HTTPError'
-                except requests.exceptions.TooManyRedirects:
-                    end_time = time.time()
-                    duration = end_time - start_time
-                    last_exception = 'TooManyRedirects'
-                except socket.error:
-                    end_time = time.time()
-                    duration = end_time - start_time
-                    last_exception = 'SocketError'
-                except RequestException as e:
+                except (requests.exceptions.Timeout, requests.exceptions.ConnectionError,
+                        requests.exceptions.HTTPError, requests.exceptions.TooManyRedirects,
+                        requests.exceptions.RequestException) as e:
                     end_time = time.time()
                     duration = end_time - start_time
                     last_exception = str(e)
@@ -211,38 +191,29 @@ class StressTestApp(QWidget):
     def initUI(self):
         self.setWindowTitle('Stress Test Application')
 
-        # URL 입력 필드
         self.url_label = QLabel('목표 주소 입력:')
         self.url_input = QLineEdit()
 
-        # 요청 개수 입력 필드
         self.num_requests_label = QLabel('요청 개수 입력 (기본 : 10000):')
         self.num_requests_input = QLineEdit()
 
-        # 스레드 개수 입력 필드
         self.num_threads_label = QLabel('스레드 개수 입력 (기본 : 10):')
         self.num_threads_input = QLineEdit()
 
-        # 재시도 횟수 입력 필드
         self.max_retries_label = QLabel('재시도 횟수 입력 (기본 : 3):')
         self.max_retries_input = QLineEdit()
 
-        # 타임아웃 시간 입력 필드
         self.timeout_label = QLabel('타임아웃 시간 입력 (기본 : 1):')
         self.timeout_input = QLineEdit()
 
-        # 진행 상황 표시
         self.progress_bar = QProgressBar()
 
-        # 시작 버튼
         self.start_button = QPushButton('Start Test')
         self.start_button.clicked.connect(self.start_test)
 
-        # 로그 출력 필드
         self.log_output = QTextEdit()
         self.log_output.setReadOnly(True)
 
-        # 레이아웃 설정
         layout = QVBoxLayout()
         layout.addWidget(self.url_label)
         layout.addWidget(self.url_input)
@@ -262,26 +233,14 @@ class StressTestApp(QWidget):
 
     def start_test(self):
         url = self.url_input.text()
-        num_requests = self.num_requests_input.text()
-        if num_requests == "":
-            num_requests = 10000
-        else:
-            num_requests = int(num_requests)
-        num_threads = self.num_threads_input.text()
-        if num_threads == "":
-            num_threads = 10
-        else:
-            num_threads = int(num_threads)
-        max_retries = self.max_retries_input.text()
-        if max_retries == "":
-            max_retries = 3
-        else:
-            max_retries = int(max_retries)
-        timeout = self.timeout_input.text()
-        if timeout == "":
-            timeout = 1
-        else:
-            timeout = int(timeout)
+        try:
+            num_requests = int(self.num_requests_input.text()) if self.num_requests_input.text() else 10000
+            num_threads = int(self.num_threads_input.text()) if self.num_threads_input.text() else 10
+            max_retries = int(self.max_retries_input.text()) if self.max_retries_input.text() else 3
+            timeout = int(self.timeout_input.text()) if self.timeout_input.text() else 1
+        except ValueError:
+            self.log_output.append("입력 값이 유효하지 않습니다. 숫자를 입력하세요.")
+            return
 
         self.thread = StressTestThread(url, num_requests, num_threads, max_retries, timeout)
         self.thread.progress.connect(self.update_progress)
