@@ -10,22 +10,22 @@ from requests.exceptions import RequestException
 
 url = input("목표 주소 입력 : ")
 num_requests = input("요청 개수 입력 (기본 : 10000) << ")
-if num_requests == "\n":
+if num_requests == "":
     num_requests = 10000
 else:
     num_requests = int(num_requests)
 num_threads = input("스레드 개수 입력 (기본 : 10) << ")
-if num_threads == "\n":
+if num_threads == "":
     num_threads = 10
 else:
     num_threads = int(num_threads)
 max_retries = input("재시도 횟수 입력 (기본 : 3) << ")
-if max_retries == "\n":
+if max_retries == "":
     max_retries = 3
 else:
     max_retries = int(max_retries)
 timeout = input("타임아웃 시간 입력 (기본 : 1) << ")
-if timeout == "\n":
+if timeout == "":
     timeout = 1
 else:
     timeout = int(timeout)
@@ -127,3 +127,5 @@ def stress_test(url, num_requests, num_threads):
     plt.savefig('response_time_distribution.png')
     print("\n응답 시간 분포 그래프가 'response_time_distribution.png' 파일로 저장되었습니다.")
     plt.show()
+
+stress_test(url, num_requests, num_threads)
