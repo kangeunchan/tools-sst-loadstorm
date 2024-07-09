@@ -8,11 +8,27 @@ from tqdm import tqdm
 import socket
 from requests.exceptions import RequestException
 
-url = "http://192.168.1.25:8084"
-num_requests = 100000
-num_threads = 100
-max_retries = 3
-timeout = 1
+url = input("목표 주소 입력 : ")
+num_requests = input("요청 개수 입력 (기본 : 10000) << ")
+if num_requests == "\n":
+    num_requests = 10000
+else:
+    num_requests = int(num_requests)
+num_threads = input("스레드 개수 입력 (기본 : 10) << ")
+if num_threads == "\n":
+    num_threads = 10
+else:
+    num_threads = int(num_threads)
+max_retries = input("재시도 횟수 입력 (기본 : 3) << ")
+if max_retries == "\n":
+    max_retries = 3
+else:
+    max_retries = int(max_retries)
+timeout = input("타임아웃 시간 입력 (기본 : 1) << ")
+if timeout == "\n":
+    timeout = 1
+else:
+    timeout = int(timeout)
 
 def send_request(url):
     for _ in range(max_retries):
@@ -111,6 +127,3 @@ def stress_test(url, num_requests, num_threads):
     plt.savefig('response_time_distribution.png')
     print("\n응답 시간 분포 그래프가 'response_time_distribution.png' 파일로 저장되었습니다.")
     plt.show()
-
-if __name__ == "__main__":
-    stress_test(url, num_requests, num_threads)
